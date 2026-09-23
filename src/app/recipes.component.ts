@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Meal } from './models/meal.model';
@@ -17,19 +17,34 @@ import { MealService } from './services/meal.service';
       </header>
       <p class="muted page-intro">Simple food, made for real life.</p>
 
+      <label class="search-field" for="recipe-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="recipe-search" type="search" placeholder="Search recipes" [value]="searchTerm()" (input)="setSearchTerm($event)" />
+        @if (searchTerm()) {
+          <button type="button" class="clear-search" aria-label="Clear recipe search" (click)="clearSearch()">×</button>
+        }
+      </label>
+
       @if (meals().length === 0) {
         <section class="empty-state">
           <span class="empty-icon">✦</span>
           <h2>No recipes yet</h2>
           <p>Add a meal to your Firestore <code>meals</code> collection to see it here.</p>
         </section>
+      } @else if (filteredMeals().length === 0) {
+        <section class="empty-state">
+          <span class="empty-icon">⌕</span>
+          <h2>No recipes found</h2>
+          <p>Try searching for a different meal name.</p>
+        </section>
       } @else {
         <div class="recipe-grid">
-          @for (meal of meals(); track meal.id ?? meal.name; let index = $index) {
+          @for (meal of filteredMeals(); track meal.id ?? meal.name; let index = $index) {
             <article class="recipe-card">
               <div class="recipe-copy">
                 <span>{{ meal.items?.length ?? 0 }} INGREDIENTS</span>
                 <h2>{{ meal.name }}</h2>
+                @if (meal.description) { <p>{{ meal.description }}</p> }
               </div>
             </article>
           }
@@ -46,6 +61,20 @@ import { MealService } from './services/meal.service';
 export class RecipesComponent {
   private readonly mealService = inject(MealService);
   readonly meals = toSignal(this.mealService.getMeals(), { initialValue: [] as Meal[] });
-  readonly cardColors = ['#f2c7b3', '#d6e4ae', '#f4d48b', '#d8c9eb'];
-  readonly cardEmojis = ['🍝', '🥗', '🌮', '🍲'];
+  readonly searchTerm = signal('');
+  readonly filteredMeals = computed(() => {
+    const search = this.searchTerm().trim().toLocaleLowerCase();
+
+    return [...this.meals()]
+      .filter((meal) => meal.name.toLocaleLowerCase().includes(search))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  });
+
+  setSearchTerm(event: Event): void {
+    this.searchTerm.set((event.target as HTMLInputElement).value);
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+  }
 }
