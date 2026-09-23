@@ -1,0 +1,12 @@
+{
+  "name": "Grocs 2",
+  "short_name": "Grocs 2",
+  "theme_color": "#10231d",
+  "background_color": "#f4f0e8",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
