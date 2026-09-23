@@ -6,7 +6,7 @@ import { AuthService } from './services/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   template: `
     <main class="auth-page">
       <div class="auth-brand"><span class="brand-mark">g</span><span>grocs</span></div>

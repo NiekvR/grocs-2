@@ -27,11 +27,9 @@ import { MealService } from './services/meal.service';
         <div class="recipe-grid">
           @for (meal of meals(); track meal.id ?? meal.name; let index = $index) {
             <article class="recipe-card">
-              <div class="recipe-image" [style.background]="cardColors[index % cardColors.length]" aria-hidden="true">{{ cardEmojis[index % cardEmojis.length] }}</div>
               <div class="recipe-copy">
                 <span>{{ meal.items?.length ?? 0 }} INGREDIENTS</span>
                 <h2>{{ meal.name }}</h2>
-                <p>{{ meal.description || 'A delicious meal for your week.' }}</p>
               </div>
             </article>
           }

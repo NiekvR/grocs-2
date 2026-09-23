@@ -1,5 +1,6 @@
 node_modules/
 dist/
+/src/environments
 .angular/
 .env
 .DS_Store
