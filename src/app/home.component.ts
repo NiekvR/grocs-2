@@ -1,31 +1,62 @@
-import { Component, inject } from '@angular/core';
-import { Auth } from '@angular/fire/auth';
-import { Firestore } from '@angular/fire/firestore';
+import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+
+interface Meal {
+  day: string;
+  date: string;
+  title: string;
+  detail: string;
+  emoji: string;
+  color: string;
+}
 
 @Component({
   selector: 'app-home',
   standalone: true,
+  imports: [RouterLink],
   template: `
-    <main class="shell">
-      <section class="hero">
-        <span class="eyebrow">GROCS 2 · PWA</span>
-        <h1>Build something<br /><em>worth returning to.</em></h1>
-        <p class="intro">Your Angular 21 progressive web app is ready, with Firebase services wired in from the start.</p>
-        <div class="status-row">
-          <span class="status-dot"></span>
-          <span>Firebase Auth &amp; Firestore connected</span>
-        </div>
+    <main class="page home-page">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark">g</span><span>grocs</span></div>
+        <button class="icon-button" aria-label="Open profile menu">•••</button>
+      </header>
+
+      <section class="welcome">
+        <p class="eyebrow">{{ greeting }}</p>
+        <h1>What are we<br /><em>cooking this week?</em></h1>
+        <p class="muted">A little planning makes every meal feel easier.</p>
       </section>
-      <section class="card-grid" aria-label="Application capabilities">
-        <article class="card"><span class="number">01</span><h2>Installable</h2><p>Fast, reliable and available from your home screen with the Angular service worker.</p></article>
-        <article class="card"><span class="number">02</span><h2>Connected</h2><p>AngularFire provides an idiomatic path to authentication and real-time Firestore data.</p></article>
-        <article class="card accent"><span class="number">03</span><h2>Ready to grow</h2><p>Replace the Firebase environment placeholders and start building your experience.</p></article>
+
+      <section class="section-heading">
+        <div><p class="eyebrow">Your plan</p><h2>This week</h2></div>
+        <button class="round-button" aria-label="Add a meal">+</button>
+      </section>
+
+      <section class="meal-list" aria-label="Meals for this week">
+        @for (meal of meals; track meal.day) {
+          <article class="meal-card" [style.--meal-color]="meal.color">
+            <div class="meal-date"><strong>{{ meal.day }}</strong><span>{{ meal.date }}</span></div>
+            <div class="meal-emoji" aria-hidden="true">{{ meal.emoji }}</div>
+            <div class="meal-info"><h3>{{ meal.title }}</h3><p>{{ meal.detail }}</p></div>
+            <span class="chevron" aria-hidden="true">›</span>
+          </article>
+        }
+      </section>
+
+      <section class="quick-actions" aria-label="Quick actions">
+        <a routerLink="/groceries" class="action-card action-card-dark"><span class="action-icon">✓</span><span><strong>Grocery list</strong><small>12 items waiting</small></span><span class="arrow">↗</span></a>
+        <a routerLink="/recipes" class="action-card action-card-light"><span class="action-icon">✦</span><span><strong>Recipes</strong><small>Find your next favourite</small></span><span class="arrow">↗</span></a>
       </section>
     </main>
+    <nav class="bottom-nav" aria-label="Main navigation"><a routerLink="/" class="active"><span>⌂</span>Home</a><a routerLink="/groceries"><span>✓</span>Groceries</a><a routerLink="/recipes"><span>✦</span>Recipes</a></nav>
   `
 })
 export class HomeComponent {
-  // Injecting these services here verifies that Firebase providers are available app-wide.
-  private readonly auth = inject(Auth);
-  private readonly firestore = inject(Firestore);
+  readonly greeting = 'GOOD MORNING, NIEK';
+  readonly meals: Meal[] = [
+    { day: 'Mon', date: '12 Aug', title: 'Creamy tomato pasta', detail: 'Dinner · 25 min', emoji: '🍝', color: '#f2c7b3' },
+    { day: 'Tue', date: '13 Aug', title: 'Green goddess bowl', detail: 'Dinner · 20 min', emoji: '🥗', color: '#d6e4ae' },
+    { day: 'Wed', date: '14 Aug', title: 'Crispy fish tacos', detail: 'Dinner · 30 min', emoji: '🌮', color: '#f4d48b' },
+    { day: 'Thu', date: '15 Aug', title: 'Roasted veggie soup', detail: 'Dinner · 40 min', emoji: '🍲', color: '#e8c6dd' }
+  ];
 }
