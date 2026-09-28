@@ -40,7 +40,7 @@ import { MealService } from './services/meal.service';
       } @else {
         <div class="recipe-grid">
           @for (meal of filteredMeals(); track meal.id ?? meal.name; let index = $index) {
-            <article class="recipe-card">
+            <article class="recipe-card" [routerLink]="['/recipes', meal.id]">
               <div class="recipe-copy">
                 <span>{{ meal.items?.length ?? 0 }} INGREDIENTS</span>
                 <h2>{{ meal.name }}</h2>
@@ -56,7 +56,7 @@ import { MealService } from './services/meal.service';
       <a routerLink="/groceries"><span>✓</span>Groceries</a>
       <a routerLink="/recipes" class="active"><span>✦</span>Recipes</a>
     </nav>
-  `
+  `,
 })
 export class RecipesComponent {
   private readonly mealService = inject(MealService);
