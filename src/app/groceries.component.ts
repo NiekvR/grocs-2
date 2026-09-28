@@ -15,7 +15,10 @@ import { MealService } from './services/meal.service';
       <header class="page-header">
         <a routerLink="/" class="back-button" aria-label="Back to home">‹</a>
         <div><p class="eyebrow">YOUR SHOPPING</p><h1>Grocery list</h1></div>
-        <button class="round-button" type="button" aria-label="Add a meal" (click)="openAddMealModal()" [disabled]="showAddMealModal()" >+</button>
+        <div class="header-actions">
+          <button class="round-button" type="button" aria-label="Add a grocery item" (click)="openQuickAddModal()">+</button>
+          <button class="round-button" type="button" aria-label="Add a meal" (click)="openAddMealModal()">☰</button>
+        </div>
       </header>
       <p class="muted page-intro">Everything you need for this week's meals.</p>
 
@@ -41,10 +44,36 @@ import { MealService } from './services/meal.service';
         <section class="empty-state">
           <span class="empty-icon">✓</span>
           <h2>No items yet</h2>
-          <p>Add a meal to start your shopping list.</p>
+          <p>Add a meal or create a single grocery item to start your shopping list.</p>
         </section>
       }
     </main>
+
+    @if (showQuickAddModal()) {
+      <div class="modal-backdrop" (click)="closeQuickAddModal()"></div>
+      <div class="modal small-modal">
+        <div class="modal-header">
+          <h2>Add grocery item</h2>
+          <button class="close-button" type="button" aria-label="Close" (click)="closeQuickAddModal()">×</button>
+        </div>
+        <div class="modal-content">
+          <div class="form-group">
+            <label for="single-item-name">Item name</label>
+            <input id="single-item-name" type="text" [(ngModel)]="singleItemName" placeholder="e.g. Parmesan" />
+          </div>
+          <div class="form-group">
+            <label for="single-item-date">Date</label>
+            <input id="single-item-date" type="date" [(ngModel)]="singleItemDate" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="secondary-button" (click)="closeQuickAddModal()">Cancel</button>
+          <button type="button" class="primary-button" (click)="addSingleGroceryItem()" [disabled]="!singleItemName.trim() || loadingSingleItem()">
+            {{ loadingSingleItem() ? 'Adding...' : 'Add item' }} <span>→</span>
+          </button>
+        </div>
+      </div>
+    }
 
     @if (showAddMealModal()) {
       <div class="modal-backdrop" (click)="closeAddMealModal()"></div>
@@ -117,11 +146,16 @@ export class GroceriesComponent {
   readonly groceries = toSignal(this.groceryService.getGroceries(), { initialValue: [] as Grocery[] });
 
   readonly showAddMealModal = signal(false);
+  readonly showQuickAddModal = signal(false);
   readonly mealSearchTerm = signal('');
   readonly selectedMeal = signal<Meal | null>(null);
   readonly selectedDate = signal(this.getTodayDate());
   readonly selectedIngredients = signal<boolean[]>([]);
   readonly loadingAddMeal = signal(false);
+  readonly loadingSingleItem = signal(false);
+
+  singleItemName = '';
+  singleItemDate = this.getTodayDate();
 
   readonly filteredMeals = computed(() => {
     const search = this.mealSearchTerm().trim().toLowerCase();
@@ -163,6 +197,18 @@ export class GroceriesComponent {
     this.selectedIngredients.set([]);
   }
 
+  openQuickAddModal(): void {
+    this.showQuickAddModal.set(true);
+    this.singleItemName = '';
+    this.singleItemDate = this.getTodayDate();
+  }
+
+  closeQuickAddModal(): void {
+    this.showQuickAddModal.set(false);
+    this.singleItemName = '';
+    this.singleItemDate = this.getTodayDate();
+  }
+
   setMealSearchTerm(event: Event): void {
     this.mealSearchTerm.set((event.target as HTMLInputElement).value);
   }
@@ -202,6 +248,27 @@ export class GroceriesComponent {
       console.error('Error adding meal to groceries:', error);
     } finally {
       this.loadingAddMeal.set(false);
+    }
+  }
+
+  async addSingleGroceryItem(): Promise<void> {
+    if (!this.singleItemName.trim()) return;
+
+    this.loadingSingleItem.set(true);
+
+    try {
+      await this.groceryService.createGrocery({
+        name: this.singleItemName.trim(),
+        done: false,
+        date: this.singleItemDate,
+        mealId: undefined
+      });
+
+      this.closeQuickAddModal();
+    } catch (error) {
+      console.error('Error creating grocery item:', error);
+    } finally {
+      this.loadingSingleItem.set(false);
     }
   }
 
