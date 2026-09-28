@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Grocery, Meal } from './models/meal.model';
 import { GroceryService } from './services/grocery.service';
 import { MealService } from './services/meal.service';
+import { MenuService } from './services/menu.service';
 
 @Component({
   selector: 'app-groceries',
@@ -135,6 +136,7 @@ import { MealService } from './services/meal.service';
 export class GroceriesComponent {
   private readonly mealService = inject(MealService);
   private readonly groceryService = inject(GroceryService);
+  private readonly menuService = inject(MenuService);
 
   readonly meals = toSignal(this.mealService.getMeals(), { initialValue: [] as Meal[] });
   readonly groceries = toSignal(this.groceryService.getGroceries(), { initialValue: [] as Grocery[] });
@@ -210,6 +212,11 @@ export class GroceriesComponent {
     this.loadingAddMeal.set(true);
 
     try {
+      await this.menuService.createMenuMeal({
+        date: new Date(`${this.selectedDate()}T12:00:00`),
+        name: meal.name
+      });
+
       const selectedItems = meal.items.filter((_, idx) => this.selectedIngredients()[idx]);
 
       for (const item of selectedItems) {

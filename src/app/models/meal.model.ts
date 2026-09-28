@@ -14,3 +14,9 @@ export interface Meal {
   description?: string;
   items?: Grocery[];
 }
+
+export interface MenuMeal {
+  id?: string;
+  date: Date;
+  name: string;
+}
