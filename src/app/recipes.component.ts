@@ -44,7 +44,6 @@ import { MealService } from './services/meal.service';
               <div class="recipe-copy">
                 <span>{{ meal.items?.length ?? 0 }} INGREDIENTS</span>
                 <h2>{{ meal.name }}</h2>
-                @if (meal.description) { <p>{{ meal.description }}</p> }
               </div>
             </a>
           }

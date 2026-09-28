@@ -1,15 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import {
-  Firestore,
-  addDoc,
-  collection,
-  collectionData,
-  deleteDoc,
-  doc,
-  docData,
-  query,
-  updateDoc,
-  where
+    Firestore,
+    addDoc,
+    collection,
+    collectionData,
+    deleteDoc,
+    doc,
+    docData,
+    query,
+    updateDoc,
+    where, getDocs
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { Grocery } from '../models/meal.model';
@@ -44,4 +44,18 @@ export class GroceryService {
   async deleteGrocery(id: string): Promise<void> {
     await deleteDoc(doc(this.firestore, 'groceries', id));
   }
+
+    async deleteCompletedGroceries(): Promise<void> {
+        const groceriesRef = collection(this.firestore, 'groceries');
+
+        const snapshot = await getDocs(
+            query(groceriesRef, where('done', '==', true))
+        );
+
+        await Promise.all(
+            snapshot.docs.map(grocery =>
+                deleteDoc(doc(this.firestore, 'groceries', grocery.id))
+            )
+        );
+    }
 }

@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { Grocery, Meal } from './models/meal.model';
 import { GroceryService } from './services/grocery.service';
 import { MealService } from './services/meal.service';
+import {MenuService} from "./services/home.service";
+import {filter, map} from "rxjs";
 
 @Component({
   selector: 'app-groceries',
@@ -16,6 +18,7 @@ import { MealService } from './services/meal.service';
         <a routerLink="/" class="back-button" aria-label="Back to home">‹</a>
         <div><p class="eyebrow">YOUR SHOPPING</p><h1>Grocery list</h1></div>
         <div class="header-actions">
+          <button class="round-button" type="button" aria-label="Add a grocery item" (click)="removeCompleted()">R</button>
           <button class="round-button" type="button" aria-label="Add a grocery item" (click)="openQuickAddModal()">+</button>
           <button class="round-button" type="button" aria-label="Add a meal" (click)="openAddMealModal()">☰</button>
         </div>
@@ -27,10 +30,10 @@ import { MealService } from './services/meal.service';
         <p class="progress-label">{{ completedCount() }} of {{ groceries().length }} items picked up</p>
       }
 
-      @if (groceries().length > 0) {
+      @if (unfinishedGroceries().length > 0) {
         <section class="grocery-group single-list-group">
           <h2>Shopping list</h2>
-          @for (item of groceries(); track item.id) {
+          @for (item of unfinishedGroceries(); track item.id) {
             <label class="grocery-item">
               <input type="checkbox" [checked]="item.done" (change)="toggleGrocery(item.id!, $event)" />
               <span class="checkmark"></span>
@@ -135,9 +138,14 @@ import { MealService } from './services/meal.service';
 export class GroceriesComponent {
   private readonly mealService = inject(MealService);
   private readonly groceryService = inject(GroceryService);
+  private readonly menuService = inject(MenuService);
 
   readonly meals = toSignal(this.mealService.getMeals(), { initialValue: [] as Meal[] });
+
   readonly groceries = toSignal(this.groceryService.getGroceries(), { initialValue: [] as Grocery[] });
+    readonly unfinishedGroceries = computed(() =>
+        this.groceries().filter(grocery => !grocery.done)
+    );
 
   readonly showAddMealModal = signal(false);
   readonly showQuickAddModal = signal(false);
@@ -212,12 +220,16 @@ export class GroceriesComponent {
     try {
       const selectedItems = meal.items.filter((_, idx) => this.selectedIngredients()[idx]);
 
+        await this.menuService.createMenuMeal({
+            date: new Date(`${this.selectedDate()}T12:00:00`),
+            name: meal.name,
+            menuId: meal.id!
+        });
+
       for (const item of selectedItems) {
         await this.groceryService.createGrocery({
           name: item.name,
-          done: false,
-          date: this.selectedDate(),
-          mealId: meal.id
+          done: false
         });
       }
 
@@ -237,9 +249,7 @@ export class GroceriesComponent {
     try {
       await this.groceryService.createGrocery({
         name: this.singleItemName.trim(),
-        done: false,
-        date: undefined,
-        mealId: undefined
+        done: false
       });
 
       this.closeQuickAddModal();
@@ -266,4 +276,8 @@ export class GroceriesComponent {
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
+
+    async removeCompleted(): Promise<void> {
+        await this.groceryService.deleteCompletedGroceries();
+    }
 }

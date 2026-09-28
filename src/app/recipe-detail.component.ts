@@ -3,16 +3,18 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map, switchMap } from 'rxjs';
 import { Meal } from './models/meal.model';
 import { MealService } from './services/meal.service';
+import {toSignal} from "@angular/core/rxjs-interop";
+import {Location} from "@angular/common";
 
 @Component({
   selector: 'app-recipe-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [],
   template: `
     @if (meal(); as selectedMeal) {
       <main class="page inner-page">
         <header class="page-header">
-          <a routerLink="/recipes" class="back-button" aria-label="Back to recipes">‹</a>
+          <a (click)="back()" class="back-button" aria-label="Back to recipes">‹</a>
           <div><p class="eyebrow">MEAL DETAIL</p><h1>{{ selectedMeal.name }}</h1></div>
         </header>
 
@@ -52,9 +54,16 @@ import { MealService } from './services/meal.service';
 export class RecipeDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly mealService = inject(MealService);
+  private readonly location = inject(Location);
 
-  readonly meal = this.route.paramMap.pipe(
-    map((params) => params.get('id')),
-    switchMap((id) => id ? this.mealService.getMeal(id) : [undefined as Meal | undefined])
-  );
+    readonly meal = toSignal(
+        this.route.paramMap.pipe(
+            map((params) => params.get('id')),
+            switchMap((id) => (id ? this.mealService.getMeal(id) : [undefined as Meal | undefined]))
+        )
+    );
+
+    back() {
+        this.location.back()
+    }
 }

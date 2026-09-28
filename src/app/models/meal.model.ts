@@ -3,9 +3,7 @@ export interface Grocery {
   name: string;
   selected?: boolean;
   done?: boolean;
-  date?: string;
   edit?: boolean;
-  mealId?: string;
 }
 
 export interface Meal {
@@ -13,4 +11,11 @@ export interface Meal {
   name: string;
   description?: string;
   items?: Grocery[];
+}
+
+export interface MenuMeal {
+    id?: string;
+    date: Date;
+    name: string;
+    menuId: string;
 }
