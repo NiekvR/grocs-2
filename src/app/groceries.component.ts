@@ -6,7 +6,6 @@ import { Grocery, Meal } from './models/meal.model';
 import { GroceryService } from './services/grocery.service';
 import { MealService } from './services/meal.service';
 import {MenuService} from "./services/home.service";
-import {filter, map} from "rxjs";
 
 @Component({
   selector: 'app-groceries',
