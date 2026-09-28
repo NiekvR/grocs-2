@@ -27,19 +27,17 @@ import { MealService } from './services/meal.service';
         <p class="progress-label">{{ completedCount() }} of {{ groceries().length }} items picked up</p>
       }
 
-      @if (groceryGroups().length > 0) {
-        @for (group of groceryGroups(); track group.date) {
-          <section class="grocery-group">
-            <h2>{{ group.date }} <span>{{ group.items.length }}</span></h2>
-            @for (item of group.items; track item.id) {
-              <label class="grocery-item">
-                <input type="checkbox" [checked]="item.done" (change)="toggleGrocery(item.id!, $event)" />
-                <span class="checkmark"></span>
-                <span [class.done]="item.done">{{ item.name }}</span>
-              </label>
-            }
-          </section>
-        }
+      @if (groceries().length > 0) {
+        <section class="grocery-group single-list-group">
+          <h2>Shopping list</h2>
+          @for (item of groceries(); track item.id) {
+            <label class="grocery-item">
+              <input type="checkbox" [checked]="item.done" (change)="toggleGrocery(item.id!, $event)" />
+              <span class="checkmark"></span>
+              <span [class.done]="item.done">{{ item.name }}</span>
+            </label>
+          }
+        </section>
       } @else {
         <section class="empty-state">
           <span class="empty-icon">✓</span>
@@ -61,10 +59,6 @@ import { MealService } from './services/meal.service';
             <label for="single-item-name">Item name</label>
             <input id="single-item-name" type="text" [(ngModel)]="singleItemName" placeholder="e.g. Parmesan" />
           </div>
-          <div class="form-group">
-            <label for="single-item-date">Date</label>
-            <input id="single-item-date" type="date" [(ngModel)]="singleItemDate" />
-          </div>
         </div>
         <div class="modal-actions">
           <button type="button" class="secondary-button" (click)="closeQuickAddModal()">Cancel</button>
@@ -79,7 +73,7 @@ import { MealService } from './services/meal.service';
       <div class="modal-backdrop" (click)="closeAddMealModal()"></div>
       <div class="modal">
         <div class="modal-header">
-          <h2>Add meal to grocery list</h2>
+          <h2>Add meal to calendar</h2>
           <button class="close-button" type="button" aria-label="Close" (click)="closeAddMealModal()">×</button>
         </div>
         <div class="modal-content">
@@ -155,27 +149,12 @@ export class GroceriesComponent {
   readonly loadingSingleItem = signal(false);
 
   singleItemName = '';
-  singleItemDate = this.getTodayDate();
 
   readonly filteredMeals = computed(() => {
     const search = this.mealSearchTerm().trim().toLowerCase();
     return this.meals()
       .filter((m) => m.name.toLowerCase().includes(search))
       .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-  });
-
-  readonly groceryGroups = computed(() => {
-    const grouped = new Map<string, Grocery[]>();
-    for (const item of this.groceries()) {
-      const date = item.date || 'No date';
-      if (!grouped.has(date)) {
-        grouped.set(date, []);
-      }
-      grouped.get(date)!.push(item);
-    }
-    return Array.from(grouped.entries())
-      .map(([date, items]) => ({ date, items }))
-      .sort((a, b) => (a.date === 'No date' ? 1 : b.date === 'No date' ? -1 : a.date.localeCompare(b.date)));
   });
 
   readonly completedCount = computed(() => this.groceries().filter((g) => g.done).length);
@@ -190,6 +169,7 @@ export class GroceriesComponent {
     this.showAddMealModal.set(true);
     this.mealSearchTerm.set('');
     this.selectedMeal.set(null);
+    this.selectedDate.set(this.getTodayDate());
   }
 
   closeAddMealModal(): void {
@@ -200,13 +180,11 @@ export class GroceriesComponent {
   openQuickAddModal(): void {
     this.showQuickAddModal.set(true);
     this.singleItemName = '';
-    this.singleItemDate = this.getTodayDate();
   }
 
   closeQuickAddModal(): void {
     this.showQuickAddModal.set(false);
     this.singleItemName = '';
-    this.singleItemDate = this.getTodayDate();
   }
 
   setMealSearchTerm(event: Event): void {
@@ -260,7 +238,7 @@ export class GroceriesComponent {
       await this.groceryService.createGrocery({
         name: this.singleItemName.trim(),
         done: false,
-        date: this.singleItemDate,
+        date: undefined,
         mealId: undefined
       });
 
